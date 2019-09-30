@@ -35,6 +35,23 @@ namespace Csv
                     this.Add(key, value);
             }
         }
+
+        public string JsonString
+        {
+            get
+            {
+                bool first = true;
+                string json = "{";
+                foreach(string key in this.Keys)
+                {
+                    json += string.Format("{2}\"{0}\":\"{1}\"", key, this[key], first?"\n\t": ",\n\t");
+                    first = false;
+                }
+                json += "\n}";
+
+                return json;
+            }
+        }
     }
 
     public class CSV : IEnumerable<Row>
@@ -81,6 +98,50 @@ namespace Csv
             {
                 return this.Data[index];
             }
+        }
+
+        public string JsonString
+        {
+            get
+            {
+                string json = "[";
+                bool first = true;
+                foreach (Row row in this)
+                {
+                    json += string.Format("{0}{1}", first ? "\n\t" : ",\n\t", row.JsonString.Replace("\n", "\n\t"));
+                    first = false;
+                }
+
+                json += "\n]";
+                return json;
+            }
+        }
+
+        public string HtmlTable(string tableCssClass = "", string headerRowCssClass = "", string rowCssClass = "")
+        {
+            string html = string.Format("<table{0}>{2}<tr{1}>",
+                string.IsNullOrEmpty(tableCssClass) ? "" : string.Format(" class=\"{0}\"", tableCssClass),
+                string.IsNullOrEmpty(headerRowCssClass) ? "" : string.Format(" class=\"{0}\"", headerRowCssClass),
+                string.IsNullOrEmpty(Heading)? "" : string.Format("<thead>{0}</thead>", Heading));
+            foreach(string header in AllKeys)
+            {
+                html += string.Format("<th>{0}</th>", header);
+            }
+
+            html += "</tr>";
+
+            foreach(Row row in this)
+            {
+                html += string.Format("<tr{0}>", string.IsNullOrEmpty(rowCssClass) ? "" : string.Format(" class=\"{0}\"", rowCssClass));
+                foreach(string header in AllKeys)
+                {
+                    html += string.Format("<td>{0}</td>", row[header]);
+                }
+                html += "</tr>";
+            }
+
+            html += "</table>";
+            return html;
         }
 
         /// <summary>
