@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Csv
 {
@@ -346,5 +347,67 @@ namespace Csv
             rule.Normalize(ref _Data, columns);
         }
 
+        /// <summary>
+        /// Gets the command to create a MySQL Create Table command
+        /// </summary>
+        public string MySQLCreateTableCommand(string tableName)
+        {
+            string output = string.Format("CREATE TABLE {0} (\n", tableName);
+            int count = 0;
+            Dictionary<string, string> colcmds = new Dictionary<string, string>();
+
+            Parallel.ForEach(AllKeys, new ParallelOptions() { MaxDegreeOfParallelism = Environment.ProcessorCount * 4 }, new Action<string>(delegate (string colName)
+            {
+                colcmds.Add(colName, GuessMySQLDataType(colName));
+            }));
+
+            foreach(string colName in this.AllKeys)
+            {
+                count++;
+                try
+                {
+                    output += string.Format("\t{0} {1}{2}\n", colName, colcmds[colName], count < AllKeys.Count ? "," : "");
+                }
+                catch
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("KeyNotFound:  {0}", colName);
+                    Console.ForegroundColor = ConsoleColor.White;
+                }
+            }
+
+            output += "\n);";
+
+            return output;
+        }
+
+        public string MySQLInsertCommand(string tableName)
+        {
+            string output = string.Format("INSERT INTO {0}\n(", tableName);
+            int count = 0;
+            foreach(string colName in AllKeys)
+            {
+                count++;
+                output += string.Format("{0}{1}", colName, count < AllKeys.Count ? ", " : ")\nVALUES\n");
+            }
+            int rowCount = 0;
+            foreach(Row row in this)
+            {
+                rowCount++;
+                count = 0;
+                output += "(";
+                foreach(string colName in AllKeys)
+                {
+                    count++;
+                    output += string.Format("{0}{1}", row[colName].Equals("PrivacySuppressed")?"NULL":row[colName], count < AllKeys.Count ? ", " : ")");
+                }
+                if (rowCount < this.RowCount)
+                    output += ",\n";
+            }
+
+            output += ";";
+            
+            return output;
+        }
     }
 }

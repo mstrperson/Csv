@@ -208,6 +208,66 @@ namespace Csv
         /// <returns></returns>
         public List<string> this[string column] => this.GetColumn(column);
 
+        public bool ContainsNulls(string column)
+        {
+            List<string> col = this.GetColumn(column);
+            foreach (string val in col)
+                if (val.ToLowerInvariant().Equals("null"))
+                    return true;
+
+            return false;
+        }
+
+        public string GuessMySQLDataType(string column)
+        {
+            string type = "TEXT";
+            List<string> col = this.GetColumn(column);
+
+            Regex interger = new Regex(@"^(null|-?\d+)$");
+            Regex floating = new Regex(@"^(null|-?\d*\.?\d+)$");
+
+            bool maybeInt = true;
+            bool maybeDouble = true;
+            bool maybeDateTime = true;
+
+            int longest = 0;
+
+            bool containsNulls = false;
+
+            foreach(string value in col)
+            {
+                if (value.Length > longest) longest = value.Length;
+                
+                string lval = value.ToLowerInvariant();
+                if (lval.Equals("privacysuppressed")) lval = "null";
+                if (lval.Equals("null")) containsNulls = true;
+
+                if (maybeInt && !interger.IsMatch(lval))
+                    maybeInt = false;
+
+                if (maybeDouble && !floating.IsMatch(lval))
+                    maybeDouble = false;
+
+                DateTime dt;
+                if (maybeDateTime && !lval.Equals("null") && !DateTime.TryParse(value, out dt))
+                    maybeDateTime = false;
+            }
+
+            if (maybeDateTime) type = "DATETIME";
+            else if (maybeInt) type = "INT";
+            else if (maybeDouble) type = "DOUBLE";
+
+            else if(longest <= 255)
+                type = "varchar(255)";
+
+            if (containsNulls)
+                type += " NULL";
+            else
+                type += " NOT NULL";
+
+            return type;
+        }
+
         /// <summary>
         /// Shortcut for GetRow.
         /// </summary>
