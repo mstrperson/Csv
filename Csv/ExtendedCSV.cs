@@ -385,10 +385,14 @@ namespace Csv
         {
             string output = string.Format("INSERT INTO {0}\n(", tableName);
             int count = 0;
+            Dictionary<string, string> columnDataTypes = new Dictionary<string, string>();
             foreach(string colName in AllKeys)
             {
                 count++;
                 output += string.Format("{0}{1}", colName, count < AllKeys.Count ? ", " : ")\nVALUES\n");
+
+                string type = GuessMySQLDataType(colName);
+                columnDataTypes.Add(colName, type);
             }
             int rowCount = 0;
             foreach(Row row in this)
@@ -399,7 +403,16 @@ namespace Csv
                 foreach(string colName in AllKeys)
                 {
                     count++;
-                    output += string.Format("{0}{1}", row[colName].Equals("PrivacySuppressed")?"NULL":row[colName], count < AllKeys.Count ? ", " : ")");
+                    string value = row[colName];
+                    string type = columnDataTypes[colName];
+                    if (type.StartsWith("DATE") || type.StartsWith("var") || type.StartsWith("TEXT"))
+                    {
+                        if (value.Contains("'"))
+                            value = value.Replace("'", @"\'");
+                        value = string.Format("'{0}'", value);
+                    }
+
+                    output += string.Format("{0}{1}", row[colName].Equals("PrivacySuppressed")?"NULL":value, count < AllKeys.Count ? ", " : ")");
                 }
                 if (rowCount < this.RowCount)
                     output += ",\n";
