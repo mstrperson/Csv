@@ -13,130 +13,13 @@ namespace Program
     {
         static void Main(string[] args)
         {
-            ExtendedCSV deviceAudit = new ExtendedCSV(new CSV(new FileStream(@"C:\Users\admin\Downloads\studentDeviceAudit.csv", FileMode.Open)), new List<string>() { "Email" });
-            CSV deviceRecords = new CSV(new FileStream(@"C:\Users\admin\Downloads\studentDeviceRecords.csv", FileMode.Open));
+            CSV contacts = new CSV(new FileStream("C:\\Users\\jcox\\Documents\\cheqroomContacts.csv", FileMode.Open));
 
-            CSV responses = new CSV(new FileStream(@"C:\Users\admin\Downloads\responses.csv", FileMode.Open));
-
-            Regex serialNumberExp = new Regex("[A-Z0-9]{12}");
-
-            foreach(Row response in responses)
-            {
-                if (!serialNumberExp.IsMatch(response["iPad Serial Number"].ToUpperInvariant()))
-                {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine("{0} is not a valid Serial Number", response["iPad Serial Number"]);
-                    Console.ForegroundColor = ConsoleColor.White;
-                    continue;
-                }
-
-                response["iPad Serial Number"] = serialNumberExp.Match(response["iPad Serial Number"].ToUpperInvariant()).Value;
-
-                if (!deviceAudit.Any(row => row["Email"].ToLowerInvariant().Equals(response["Email"].ToLowerInvariant())))
-                {
-
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("{0} does not appear in the Audit report?", response["Full Name"]);
-                    Console.ForegroundColor = ConsoleColor.White;
-
-                    deviceRecords.Add(new Row()
-                    {
-                        { "User Name", response["Email"].Split('@')[0] },
-                        { "Full Name", response["Full Name"] },
-                        { "Serial Number", response["iPad Serial Number"] },
-                        { "Asset Tag", "" },
-                        { "Device Type", "iPad" }
-                    });
-
-                    continue;
-                }
-
-                bool found = true;
-                Row auditRecord = deviceAudit.Where(row => row["Email"].ToLowerInvariant().Equals(response["Email"].ToLowerInvariant())).Single();
-                if (string.IsNullOrEmpty(auditRecord["iPad Serial Number"]))
-                {
-                    auditRecord["iPad Serial Number"] = response["iPad Serial Number"];
-                    auditRecord["Has iPad"] = "TRUE";
-                    deviceRecords.Add(new Row()
-                    {
-                        { "User Name", auditRecord["Username"] },
-                        { "Full Name", auditRecord["Full Name"] },
-                        { "Serial Number", auditRecord["iPad Serial Number"] },
-                        { "Asset Tag", "" },
-                        { "Device Type", "iPad" }
-                    });
-
-                    Console.WriteLine("Identified missing student record:  {0} has {1}", auditRecord["Full Name"], auditRecord["iPad Serial Number"]);
-                }
-                else if (response["iPad Serial Number"].Equals(auditRecord["iPad Serial Number"]))
-                {
-                    auditRecord["Confirmed iPad"] = "TRUE";
-                    Console.WriteLine("Confirmed iPad {0} for {1}", auditRecord["iPad Serial Number"], auditRecord["Full Name"]);
-                }
-                else
-                    found = false;
-                
-                if(!found && !string.IsNullOrEmpty(auditRecord["iPad 2 Serial Number"]))
-                {
-                    Console.WriteLine("Student records indicate more than one iPad is assigned");
-
-                    if (response["iPad Serial Number"].Equals(auditRecord["iPad 2 Serial Number"]))
-                    {
-                        auditRecord["Confirmed iPad"] = "TRUE";
-                        Console.WriteLine("Confirmed iPad {0} for {1}", auditRecord["iPad 2 Serial Number"], auditRecord["Full Name"]);
-
-                        string stemp = auditRecord["iPad Serial Number"];
-                        string atemp = auditRecord["iPad Asset Tag"];
-
-                        auditRecord["iPad Serial Number"] = auditRecord["iPad 2 Serial Number"];
-                        auditRecord["iPad Asset Tag"] = auditRecord["iPad 2 Asset Tag"];
-
-                        auditRecord["iPad 2 Serial Number"] = stemp;
-                        auditRecord["iPad 2 Asset Tag"] = atemp;
-
-                        auditRecord["Second iPad Extra"] = "TRUE";
-                    }
-                    else
-                    {
-                        Console.ForegroundColor = ConsoleColor.Magenta;
-                        Console.WriteLine("Neither iPad record matches the student's reported Serial Number");
-                        Console.ForegroundColor = ConsoleColor.White;
-                        auditRecord["Reported iPad Serial Number"] = response["iPad Serial Number"].ToUpperInvariant();
-                        deviceRecords.Add(new Row()
-                        {
-                            { "User Name", auditRecord["Username"] },
-                            { "Full Name", auditRecord["Full Name"] },
-                            { "Serial Number", response["iPad Serial Number"] },
-                            { "Asset Tag", "" },
-                            { "Device Type", "iPad" }
-                        });
-                    }
-                }
-                else if(!found)
-                {
-                    Console.ForegroundColor = ConsoleColor.Magenta;
-                    Console.WriteLine("iPad record does not match the student's reported Serial Number");
-                    Console.ForegroundColor = ConsoleColor.White;
-                    auditRecord["Reported iPad Serial Number"] = response["iPad Serial Number"];
-                    deviceRecords.Add(new Row()
-                    {
-                        { "User Name", auditRecord["Username"] },
-                        { "Full Name", auditRecord["Full Name"] },
-                        { "Serial Number", response["iPad Serial Number"] },
-                        { "Asset Tag", "" },
-                        { "Device Type", "iPad" }
-                    });
-                }
-            }
-
-            deviceAudit.Save(@"C:\Users\admin\Downloads\deviceAuditMerged.csv");
-            deviceRecords.Save(@"C:\Users\admin\Downloads\deviceRecordsMerged.csv");
+            contacts.Save("C:\\Users\\jcox\\Documents\\contactsImport.csv", Delimeter.Semicolon);
 
             Console.WriteLine("Done!");
             Console.ReadKey();
         }
-
-
 
         protected static void StudentDeviceAudit()
         {

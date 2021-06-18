@@ -11,6 +11,13 @@ using System.Collections;
 /// </summary>
 namespace Csv
 {
+    public enum Delimeter
+    {
+        Comma = ',',
+        Semicolon = ';',
+        Tab = '\t'
+    }
+
     public class Row : Dictionary<string,string>
     {
         /// <summary>
@@ -302,18 +309,18 @@ namespace Csv
         /// Open a CSV from a stream.
         /// </summary>
         /// <param name="inputStream"></param>
-        public CSV(Stream inputStream)
+        public CSV(Stream inputStream, Delimeter delimeter = Delimeter.Comma)
         {
             Heading = "";
             _Data = new List<Row>();
             StreamReader reader = new StreamReader(inputStream);
             string line = reader.ReadLine();
-            string[] headers = line.Split(',');
+            string[] headers = line.Split((char)delimeter);
             while (!reader.EndOfStream)
             {
                 Row row = new Row();
                 line = reader.ReadLine();
-                string[] values = line.Split(',');
+                string[] values = line.Split((char)delimeter);
                 for (int i = 0; i < headers.Length && i < values.Length; i++)
                 {
                     if (Quoted.IsMatch(values[i]))
@@ -514,17 +521,17 @@ namespace Csv
         /// This method will delete an existing file with this name.
         /// </summary>
         /// <param name="fileName"></param>
-        public void Save(string fileName)
+        public void Save(string fileName, Delimeter delimeter = Delimeter.Comma)
         {
             if (File.Exists(fileName)) File.Delete(fileName);
-            this.Save(new FileStream(fileName, FileMode.OpenOrCreate));
+            this.Save(new FileStream(fileName, FileMode.OpenOrCreate), delimeter);
         }
 
         /// <summary>
         /// Save the CSV to a stream.
         /// </summary>
         /// <param name="output"></param>
-        public void Save(Stream output)
+        public void Save(Stream output, Delimeter delimeter = Delimeter.Comma)
         {
             StreamWriter writer = new StreamWriter(output);
             writer.AutoFlush = true;
@@ -540,7 +547,7 @@ namespace Csv
             writer.Write(AllKeys[0]);
             for (int i = 1; i < AllKeys.Count; i++)
             {
-                writer.Write(",{0}", AllKeys[i]);
+                writer.Write("{0}{1}", (char)delimeter, AllKeys[i]);
             }
             writer.WriteLine();
 
@@ -550,7 +557,7 @@ namespace Csv
                     writer.Write(row[AllKeys[0]]);
                 for (int i = 1; i < AllKeys.Count; i++)
                 {
-                    writer.Write(",");
+                    writer.Write((char)delimeter);
                     if (row.ContainsKey(AllKeys[i]))
                     {
                         writer.Write(row[AllKeys[i]]);
