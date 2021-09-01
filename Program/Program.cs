@@ -13,31 +13,51 @@ namespace Program
     {
         static void Main(string[] args)
         {
+            // Open a CSV File that is saved on  your computer
             CSV contacts = new CSV(new FileStream("C:\\Users\\jcox\\Documents\\cheqroomContacts.csv", FileMode.Open));
+            
+            // go through each row in the file
+            foreach (Row row in contacts)
+            {
+                if (row["some-column-header"].Equals("What you're looking for..."))
+                {
+                    row["some-other-column-header"] = "the value you want!";
+                }
+            }
 
-            contacts.Save("C:\\Users\\jcox\\Documents\\contactsImport.csv", Delimeter.Semicolon);
+            // save the file to a DIFFERENT file name.
+            // (it will not allow you to overwrite the file you originally opened--I did that on purpose)
+            contacts.Save("C:\\Users\\jcox\\Documents\\contactsImport.csv");
 
             Console.WriteLine("Done!");
             Console.ReadKey();
         }
 
+        // here's some code that uses multiple CSVs and has some merge stuff going on.
         protected static void StudentDeviceAudit()
         {
             CSV jamfData = new CSV(new FileStream(@"C:\Users\admin\Downloads\jamfData.csv", FileMode.Open));
             CSV waspData = new CSV(new FileStream(@"C:\Users\admin\Downloads\waspData.csv", FileMode.Open));
 
+            // matches "Class I", "Class II", or "Class III"
             Regex classDept = new Regex("Class (I){1,3}");
 
+            // CSV with some extra stuff... don't worry about this for now.
             ExtendedCSV studentDeviceAudit = new ExtendedCSV(new CSV(), new List<string>() { "Username" });
 
+            // new CSV to put info into
             CSV studentDeviceRecords = new CSV();
 
             foreach (Row jamfRow in jamfData)
             {
+                // if it isn't a Class I, II, III computer, skip it!
                 if (!classDept.IsMatch(jamfRow["Department"]) || string.IsNullOrEmpty(jamfRow["Asset Tag"]))
                     continue;
+                
+                // if the studentDeviceRecords does not contain a device with this asset tag...
                 if (!studentDeviceRecords.Any(dev => dev["Asset Tag"].Equals(jamfRow["Asset Tag"])))
                 {
+                    // add a new row with that Asset Tag
                     studentDeviceRecords.Add(new Row()
                     {
                         { "User Name", jamfRow["Username"] },
@@ -52,8 +72,11 @@ namespace Program
                     Console.WriteLine("I found the same asset tag listed twice? {0}", jamfRow["Asset Tag"]);
                 }
 
+                // print some nice debug messages to the console.
                 Console.WriteLine("Found {0} assigned to {1}", jamfRow["Asset Tag"], jamfRow["Full Name"]);
 
+                
+                // don't worry about this section..... ;\
                 Row studentRow = new Row();
 
                 try
