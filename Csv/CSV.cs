@@ -5,6 +5,7 @@ using System.Web;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Collections;
+using System.Text;
 
 /// <summary>
 /// Summary description for CSV
@@ -533,11 +534,8 @@ namespace Csv
         /// <param name="output"></param>
         public void Save(Stream output, Delimeter delimeter = Delimeter.Comma)
         {
-            StreamWriter writer = new StreamWriter(output);
+            StreamWriter writer = new StreamWriter(output, Encoding.UTF8);
             writer.AutoFlush = true;
-
-            if (!Heading.Equals(""))
-                writer.WriteLine(Heading);
 
             if (AllKeys.Count <= 0)
             {
