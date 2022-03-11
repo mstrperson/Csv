@@ -127,7 +127,8 @@ namespace Csv
 
             stripped = Capitalize ? stripped.ToUpperInvariant() : stripped.ToLowerInvariant();
 
-            if (Separator == MacSeparator.None) return stripped;
+            if (Separator == MacSeparator.None) 
+                return stripped;
 
             string formatted = "";
             for (int i = 0; i < 12; i += 2)

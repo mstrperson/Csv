@@ -13,21 +13,18 @@ namespace Program
     {
         static void Main(string[] args)
         {
-            // Open a CSV File that is saved on  your computer
-            CSV contacts = new CSV(new FileStream("C:\\Users\\jcox\\Documents\\cheqroomContacts.csv", FileMode.Open));
-            
-            // go through each row in the file
-            foreach (Row row in contacts)
+            CSV csv = new CSV(new FileStream("C:\\Users\\jcox\\Downloads\\test.csv", FileMode.Open));
+
+            foreach (Row row in csv)
             {
-                if (row["some-column-header"].Equals("What you're looking for..."))
+                foreach (string key in row.Keys)
                 {
-                    row["some-other-column-header"] = "the value you want!";
+                    Console.WriteLine($"{key}: {row[key]}");
                 }
             }
-
-            // save the file to a DIFFERENT file name.
-            // (it will not allow you to overwrite the file you originally opened--I did that on purpose)
-            contacts.Save("C:\\Users\\jcox\\Documents\\contactsImport.csv");
+            
+            csv.Save("C:\\Users\\jcox\\Downloads\\test2.csv");
+            
 
             Console.WriteLine("Done!");
             Console.ReadKey();

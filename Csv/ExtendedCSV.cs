@@ -8,7 +8,7 @@ namespace Csv
 {
 
     /// <summary>
-    /// Extention of the CSV class which can be used for various data manipulation.
+    /// Extention of the CSV class which can be used for various _data manipulation.
     /// 
     /// Currently implements flattening of CSV files given a list of primary keys.
     /// </summary>
@@ -46,7 +46,7 @@ namespace Csv
         /// </summary>
         /// <param name="toExtend">To extend.</param>
         /// <param name="uidfields">Uidfields.</param>
-        public ExtendedCSV(CSV toExtend, List<string> uidfields) : base(toExtend.Data)
+        public ExtendedCSV(CSV toExtend, List<string> uidfields) : base(toExtend._data)
         {
             this.UniqueFields = uidfields;
         }
@@ -83,7 +83,7 @@ namespace Csv
         /// <param name="primaryKey">Primary key.</param>
         public Row Find(Row primaryKey)
         {
-            foreach(Row row in this._Data)
+            foreach(Row row in this._data)
             {
                 bool match = true;
                 foreach(string pk in UniqueFields)
@@ -110,7 +110,7 @@ namespace Csv
             try
             {
                 Row match = this.Find(primaryKey);
-                this._Data.Remove(match);
+                this._data.Remove(match);
             }
             catch (KeyNotFoundException)
             {
@@ -132,20 +132,20 @@ namespace Csv
         {
             List<Row> output = new List<Row>();
 
-            for (int i = 0; i < this.Data.Count; i++)
+            for (int i = 0; i < this._data.Count; i++)
             {
                 bool merged = false;
                 for (int j = 0; j < output.Count; j++)
                 {
-                    if(CompareUniqueFields(this.Data[i], output[j]))
+                    if(CompareUniqueFields(this._data[i], output[j]))
                     {
-                        output[j] = Merge(output[j], this.Data[i]);
+                        output[j] = Merge(output[j], this._data[i]);
                         merged = true;
                     }
                 }
 
                 if (!merged)
-                    output.Add(this.Data[i]);
+                    output.Add(this._data[i]);
             }
 
             return new CSV(output);
@@ -190,12 +190,12 @@ namespace Csv
         /// The merger looks for matching unique field rows in the /other/ csv and merges them into this one.
         /// 
         /// </summary>
-        /// <param name="other">CSV with additional data.</param>
+        /// <param name="other">CSV with additional _data.</param>
         public void Merge(CSV other)
         {
-            foreach (Row rowA in this.Data)
+            foreach (Row rowA in this._data)
             {
-                foreach (Row rowB in other.Data)
+                foreach (Row rowB in other._data)
                 {
                     if(CompareUniqueFields(rowA, rowB))
                     {
@@ -203,7 +203,7 @@ namespace Csv
                         {
                             if(!rowA.ContainsKey(column))
                             {
-                                // add the missing data to this sheet.
+                                // add the missing _data to this sheet.
                                 rowA.Add(column, rowB[column]);
                             }
                             else if(string.IsNullOrWhiteSpace(rowA[column]))
@@ -212,7 +212,7 @@ namespace Csv
                             }
                             else if(!string.IsNullOrWhiteSpace(rowB[column]) && !rowA[column].Equals(rowB[column]))
                             {
-                                // check for conflicting data.
+                                // check for conflicting _data.
                                 rowA[column] = ConflictRule.Resolve(rowA, rowB, column);
                             }
                         }
@@ -221,9 +221,9 @@ namespace Csv
             }
         }
 
-        public void GetDataColumnsFrom(ExtendedCSV other, List<string> columnsToPull)
+        public void Get_dataColumnsFrom(ExtendedCSV other, List<string> columnsToPull)
         {
-            foreach(Row sourceRow in this._Data)
+            foreach(Row sourceRow in this._data)
             {
                 Row otherRow;
                 try
@@ -265,10 +265,10 @@ namespace Csv
         {
             CSV output = new CSV();
 
-            foreach(Row row in other.Data)
+            foreach(Row row in other._data)
             {
                 bool found = false;
-                foreach(Row checkRow in this.Data)
+                foreach(Row checkRow in this._data)
                 {
                     if(CompareUniqueFields(checkRow, row))
                     {
@@ -295,10 +295,10 @@ namespace Csv
         public CSV GetExtraRowsFrom(CSV other)
         {
             CSV output = new CSV();
-            foreach (Row row in this.Data)
+            foreach (Row row in this._data)
             {
                 bool found = false;
-                foreach (Row checkRow in other.Data)
+                foreach (Row checkRow in other._data)
                 {
                     if (CompareUniqueFields(checkRow, row))
                     {
@@ -320,7 +320,7 @@ namespace Csv
         {
             CSV output = new CSV();
 
-            foreach(Row row in other.Data)
+            foreach(Row row in other._data)
             {
                 try
                 {
@@ -344,7 +344,7 @@ namespace Csv
 
         public void NormalizeColumns(INormalizationRule rule, List<string> columns)
         {
-            rule.Normalize(ref _Data, columns);
+            rule.Normalize(ref _data, columns);
         }
 
         /// <summary>
@@ -358,7 +358,7 @@ namespace Csv
 
             Parallel.ForEach(AllKeys, new ParallelOptions() { MaxDegreeOfParallelism = Environment.ProcessorCount * 4 }, new Action<string>(delegate (string colName)
             {
-                colcmds.Add(colName, GuessMySQLDataType(colName));
+                colcmds.Add(colName, GuessMySqlDataType(colName));
             }));
 
             foreach(string colName in this.AllKeys)
@@ -385,14 +385,14 @@ namespace Csv
         {
             string output = string.Format("INSERT INTO {0}\n(", tableName);
             int count = 0;
-            Dictionary<string, string> columnDataTypes = new Dictionary<string, string>();
+            Dictionary<string, string> column_dataTypes = new Dictionary<string, string>();
             foreach(string colName in AllKeys)
             {
                 count++;
                 output += string.Format("{0}{1}", colName, count < AllKeys.Count ? ", " : ")\nVALUES\n");
 
-                string type = GuessMySQLDataType(colName);
-                columnDataTypes.Add(colName, type);
+                string type = GuessMySqlDataType(colName);
+                column_dataTypes.Add(colName, type);
             }
             int rowCount = 0;
             foreach(Row row in this)
@@ -404,7 +404,7 @@ namespace Csv
                 {
                     count++;
                     string value = row[colName];
-                    string type = columnDataTypes[colName];
+                    string type = column_dataTypes[colName];
                     if (type.StartsWith("DATE") || type.StartsWith("var") || type.StartsWith("TEXT"))
                     {
                         if (value.Contains("'"))
