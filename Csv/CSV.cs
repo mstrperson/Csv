@@ -5,6 +5,7 @@ using System.Web;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Collections;
+using System.Runtime.Serialization;
 using System.Text;
 
 /// <summary>
@@ -19,6 +20,7 @@ namespace Csv
         Tab = '\t'
     }
 
+    [DataContract]
     public class Row : Dictionary<string,string>
     {
         public bool Equals(Row other)
@@ -141,14 +143,17 @@ namespace Csv
         }
     }
 
+    [DataContract]
     public class CSV : IEnumerable<Row>
     {
         /// <summary>
         /// A title or heading for the table.  If you want one...
         /// </summary>
+        [DataMember(Name="heading")]
         public string Heading
         { get; set; }
 
+        [DataMember(Name="data")]
         internal List<Row> _data;
 
         /// <summary>
@@ -171,6 +176,7 @@ namespace Csv
         /// <returns></returns>
         public Row this[int index] => this._data[index];
 
+        [IgnoreDataMember]
         public string JsonString
         {
             get
@@ -187,7 +193,7 @@ namespace Csv
                 return json;
             }
         }
-
+        
         public string HtmlTable(string tableCssClass = "", string headerRowCssClass = "", string rowCssClass = "")
         {
             string html = string.Format("<table{0}>{2}<tr{1}>",
@@ -592,12 +598,14 @@ namespace Csv
             _allKeys = new List<string>();
         }
 
+        [IgnoreDataMember]
         private List<string> _allKeys;
 
         /// <summary>
         /// Get the list of all keys in this CSV.
         /// Not every row is guaranteed to have a value for every key.
         /// </summary>
+        [IgnoreDataMember]
         public List<string> AllKeys
         {
             get
@@ -625,11 +633,13 @@ namespace Csv
         /// <summary>
         /// How many Columns are in this CSV?
         /// </summary>
+        [IgnoreDataMember]
         public int ColCount => AllKeys.Count;
 
         /// <summary>
         /// How many rows are in this CSV?
         /// </summary>
+        [IgnoreDataMember]
         public int RowCount => _data.Count;
 
         /// <summary>
