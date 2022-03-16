@@ -20,7 +20,6 @@ namespace Csv
         Tab = '\t'
     }
 
-    [DataContract]
     public class Row : Dictionary<string,string>
     {
         public bool Equals(Row other)
